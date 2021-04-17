@@ -1,0 +1,9 @@
+Status "{{ .Status }}" alert
+======================
+
+target: {{ .Target }}
+checked at: {{ .CheckedAt }}{{ if .Message }}
+
+{{ .Message }}{{ end }}
+
+{{ .StatusPage }}
