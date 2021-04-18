@@ -1,7 +1,7 @@
 Ayd? Mail Alert
 ===============
 
-SMTP email alert sender for [Ayd?](https://github.com/macrat/ayd) status monitoring server.
+SMTP email alert sender for [Ayd?](https://github.com/macrat/ayd) status monitoring service.
 
 
 ## Usage
@@ -11,6 +11,7 @@ $ export SMTP_SERVER=smtp.gmail.com:465
 $ export SMTP_USERNAME=<< your username >>
 $ export SMTP_PASSWORD=<< your password >>
 $ export AYD_MAIL_TO="Jhon <jhon@example.com>, Alice <alice@example.com>"
+$ export AYD_URL="http://ayd-external-url.example.com"
 
 $ ayd -a exec:ayd-mail-alert ping:your-target.example.com
 ```
