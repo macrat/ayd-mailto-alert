@@ -18,6 +18,11 @@ import (
 	gomail "github.com/go-mail/mail"
 )
 
+var (
+	version = "HEAD"
+	commit  = "UNKNOWN"
+)
+
 //go:embed templates/mail.html
 var htmlTemplate string
 
@@ -103,6 +108,8 @@ type Context struct {
 }
 
 func main() {
+	fmt.Printf("ayd-mail-alert %s (%s): ", version, commit)
+
 	smtpHost, smtpPort, err := ParseSMTPServer(GetRequiredEnv("smtp_server"))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Environment variable `smtp_server` is invalid: %s\n", err)
