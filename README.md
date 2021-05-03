@@ -8,7 +8,7 @@ SMTP email alert sender for [Ayd?](https://github.com/macrat/ayd) status monitor
 
 1. Download binary from [release page](https://github.com/macrat/ayd-mailto-alert/releases).
 
-2. Save downloaded binary to somewhere directory that registered to PATH.
+2. Save downloaded binary as `ayd-mailto-alert` to somewhere directory that registered to PATH.
 
 
 ## Usage
