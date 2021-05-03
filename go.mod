@@ -1,4 +1,4 @@
-module github.com/macrat/ayd-mail-alert
+module github.com/macrat/ayd-mailto-alert
 
 go 1.16
 

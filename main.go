@@ -108,7 +108,12 @@ type Context struct {
 }
 
 func main() {
-	fmt.Printf("ayd-mail-alert %s (%s): ", version, commit)
+	if len(os.Args) != 5 {
+		fmt.Fprintln(os.Stderr, "$ ayd-mailto-alert MAILTO_URI TARGET_URI TARGET_STATUS TARGET_CHECKED_AT")
+		os.Exit(2)
+	}
+
+	fmt.Printf("ayd-mailto-alert %s (%s): ", version, commit)
 
 	smtpHost, smtpPort, err := ParseSMTPServer(GetRequiredEnv("smtp_server"))
 	if err != nil {
@@ -124,9 +129,14 @@ func main() {
 		os.Exit(2)
 	}
 
-	to, err := mail.ParseAddressList(GetRequiredEnv("ayd_mail_to"))
+	mailto, err := url.Parse(os.Args[1])
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Environment variable `ayd_mail_to` is invalid: %s\n", err)
+		fmt.Fprintf(os.Stderr, "Argument MAILTO_URI is invalid: %s\n", err)
+		os.Exit(2)
+	}
+	to, err := mail.ParseAddressList(mailto.Opaque)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Argument MAILTO_URI is invalid: %s\n", err)
 		os.Exit(2)
 	}
 
@@ -143,10 +153,10 @@ func main() {
 
 	ctx := Context{
 		StatusPage: statusPage.String(),
-		Target:     GetRequiredEnv("ayd_target"),
-		CheckedAt:  GetRequiredEnv("ayd_checked_at"),
-		Status:     GetRequiredEnv("ayd_status"),
-		Message:    GetMessage(aydURL, GetRequiredEnv("ayd_target")),
+		Target:     os.Args[2],
+		Status:     os.Args[3],
+		CheckedAt:  os.Args[4],
+		Message:    GetMessage(aydURL, os.Args[2]),
 	}
 
 	html := htmltemplate.Must(htmltemplate.New("mail.html").Parse(htmlTemplate))

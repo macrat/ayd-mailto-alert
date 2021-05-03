@@ -3,7 +3,7 @@ package main_test
 import (
 	"testing"
 
-	"github.com/macrat/ayd-mail-alert"
+	"github.com/macrat/ayd-mailto-alert"
 )
 
 func TestParseSMTPServer(t *testing.T) {
