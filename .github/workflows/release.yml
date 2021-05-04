@@ -18,6 +18,8 @@ jobs:
           fetch-depth: 0
       - name: Test
         run: go test -cover ./...
+      - name: Install upx
+        run: sudo apt install upx -y
       - uses: goreleaser/goreleaser-action@v2
         with:
           version: latest
