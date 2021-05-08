@@ -2,20 +2,20 @@ package main
 
 import (
 	_ "embed"
-	"encoding/json"
 	"fmt"
 	htmltemplate "html/template"
 	"io"
 	"net"
-	"net/http"
 	"net/mail"
 	"net/url"
 	"os"
 	"strconv"
 	"strings"
 	texttemplate "text/template"
+	"time"
 
 	gomail "github.com/go-mail/mail"
+	"github.com/macrat/ayd/lib-ayd"
 )
 
 var (
@@ -64,39 +64,18 @@ func GetRequiredEnv(key string) string {
 	return value
 }
 
-func GetMessage(aydURL *url.URL, target string) string {
-	u, err := aydURL.Parse("status.json")
+func GetMessage(aydURL, targetURL *url.URL) (string, error) {
+	resp, err := ayd.Fetch(aydURL)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to generate status endpoint URL: %s\n", err)
-		os.Exit(1)
+		return "", fmt.Errorf("failed to fetch status: %w", err)
 	}
 
-	resp, err := http.Get(u.String())
+	rs, err := resp.RecordsOf(targetURL)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to fetch message: %s\n", err)
-		return ""
-	}
-	defer resp.Body.Close()
-
-	var msg struct {
-		Incidents []struct {
-			Target  string `json:"target"`
-			Message string `json:"message"`
-		} `json:"current_incidents"`
+		return "", fmt.Errorf("failed to fetch status: %w", err)
 	}
 
-	if err = json.NewDecoder(resp.Body).Decode(&msg); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to parse status data: %s\n", err)
-		return ""
-	}
-
-	for _, incident := range msg.Incidents {
-		if incident.Target == target {
-			return incident.Message
-		}
-	}
-	fmt.Fprintf(os.Stderr, "No such incident information: %s\n", target)
-	return ""
+	return rs[len(rs)-1].Message, nil
 }
 
 type Context struct {
@@ -108,55 +87,57 @@ type Context struct {
 }
 
 func main() {
-	if len(os.Args) != 5 {
+	args, err := ayd.ParseAlertPluginArgs()
+	if err != nil {
 		fmt.Fprintln(os.Stderr, "$ ayd-mailto-alert MAILTO_URI TARGET_URI TARGET_STATUS TARGET_CHECKED_AT")
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
 	}
 
-	fmt.Printf("ayd-mailto-alert %s (%s): ", version, commit)
+	logger := ayd.NewLogger(args.AlertURL)
 
 	smtpHost, smtpPort, err := ParseSMTPServer(GetRequiredEnv("smtp_server"))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Environment variable `smtp_server` is invalid: %s\n", err)
-		os.Exit(2)
+		logger.Failure(fmt.Sprintf("environment variable `smtp_server` is invalid: %s", err))
+		return
 	}
 	smtpUsername := GetRequiredEnv("smtp_username")
 	smtpPassword := GetRequiredEnv("smtp_password")
 
 	from, err := mail.ParseAddress(GetEnv("ayd_mail_from", "Ayd? Alert <ayd@localhost>"))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Environment variable `ayd_mail_from` is invalid: %s\n", err)
-		os.Exit(2)
+		logger.Failure(fmt.Sprintf("environment variable `ayd_mail_from` is invalid: %s", err))
+		return
 	}
 
-	mailto, err := url.Parse(os.Args[1])
+	to, err := mail.ParseAddressList(args.AlertURL.Opaque)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Argument MAILTO_URI is invalid: %s\n", err)
-		os.Exit(2)
-	}
-	to, err := mail.ParseAddressList(mailto.Opaque)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Argument MAILTO_URI is invalid: %s\n", err)
-		os.Exit(2)
+		logger.Failure(fmt.Sprintf("mail address is invalid: %s", err))
+		return
 	}
 
 	aydURL, err := url.Parse(GetEnv("ayd_url", "http://localhost:9000"))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Environment variable `ayd_url` is invalid: %s\n", err)
-		os.Exit(2)
+		logger.Failure(fmt.Sprintf("environment variable `ayd_url` is invalid: %s", err))
+		return
 	}
 	statusPage, err := aydURL.Parse("status.html")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to generate status page URL: %s\n", err)
-		os.Exit(1)
+		logger.Failure(fmt.Sprintf("failed to generate status page URL: %s", err))
+		return
+	}
+
+	message, err := GetMessage(aydURL, args.TargetURL)
+	if err != nil {
+		logger.Unknown(err.Error())
 	}
 
 	ctx := Context{
 		StatusPage: statusPage.String(),
-		Target:     os.Args[2],
-		Status:     os.Args[3],
-		CheckedAt:  os.Args[4],
-		Message:    GetMessage(aydURL, os.Args[2]),
+		Target:     args.TargetURL.String(),
+		Status:     args.Status.String(),
+		CheckedAt:  args.CheckedAt.Format(time.RFC3339),
+		Message:    message,
 	}
 
 	html := htmltemplate.Must(htmltemplate.New("mail.html").Parse(htmlTemplate))
@@ -179,9 +160,9 @@ func main() {
 	dialer.StartTLSPolicy = gomail.MandatoryStartTLS
 
 	if err := dialer.DialAndSend(msg); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to send e-mail: %s\n", err)
-		os.Exit(1)
+		logger.Failure(fmt.Sprintf("failed to send e-mail: %s", err))
+		return
 	}
 
-	fmt.Printf("Sent alert to %s\n", to)
+	logger.Healthy(fmt.Sprintf("sent alert to %s", to))
 }
