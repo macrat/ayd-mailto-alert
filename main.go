@@ -55,11 +55,11 @@ func GetEnv(key string, default_ string) string {
 	return value
 }
 
-func GetRequiredEnv(key string) string {
+func GetRequiredEnv(logger ayd.Logger, key string) string {
 	value := GetEnv(key, "")
 	if value == "" {
-		fmt.Fprintf(os.Stderr, "Environment variable `%s` is required.\n", key)
-		os.Exit(2)
+		logger.Failure(fmt.Sprintf("Environment variable `%s` is required", key))
+		os.Exit(0)
 	}
 	return value
 }
@@ -96,13 +96,13 @@ func main() {
 
 	logger := ayd.NewLogger(args.AlertURL)
 
-	smtpHost, smtpPort, err := ParseSMTPServer(GetRequiredEnv("smtp_server"))
+	smtpHost, smtpPort, err := ParseSMTPServer(GetRequiredEnv(logger, "smtp_server"))
 	if err != nil {
 		logger.Failure(fmt.Sprintf("environment variable `smtp_server` is invalid: %s", err))
 		return
 	}
-	smtpUsername := GetRequiredEnv("smtp_username")
-	smtpPassword := GetRequiredEnv("smtp_password")
+	smtpUsername := GetRequiredEnv(logger, "smtp_username")
+	smtpPassword := GetRequiredEnv(logger, "smtp_password")
 
 	from, err := mail.ParseAddress(GetEnv("ayd_mail_from", "Ayd? Alert <ayd@localhost>"))
 	if err != nil {
