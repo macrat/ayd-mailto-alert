@@ -64,20 +64,6 @@ func GetRequiredEnv(logger ayd.Logger, key string) string {
 	return value
 }
 
-func GetMessage(aydURL, targetURL *url.URL) (string, error) {
-	resp, err := ayd.Fetch(aydURL)
-	if err != nil {
-		return "", fmt.Errorf("failed to fetch status: %w", err)
-	}
-
-	rs, err := resp.RecordsOf(targetURL)
-	if err != nil {
-		return "", fmt.Errorf("failed to fetch status: %w", err)
-	}
-
-	return rs[len(rs)-1].Message, nil
-}
-
 type Context struct {
 	StatusPage string
 	Target     string
@@ -127,17 +113,12 @@ func main() {
 		return
 	}
 
-	message, err := GetMessage(aydURL, args.TargetURL)
-	if err != nil {
-		logger.Unknown(err.Error())
-	}
-
 	ctx := Context{
 		StatusPage: statusPage.String(),
 		Target:     args.TargetURL.String(),
 		Status:     args.Status.String(),
 		CheckedAt:  args.CheckedAt.Format(time.RFC3339),
-		Message:    message,
+		Message:    args.Message,
 	}
 
 	html := htmltemplate.Must(htmltemplate.New("mail.html").Parse(htmlTemplate))

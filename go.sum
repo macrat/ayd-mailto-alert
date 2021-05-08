@@ -2,6 +2,8 @@ github.com/go-mail/mail v2.3.1+incompatible h1:UzNOn0k5lpfVtO31cK3hn6I4VEVGhe3lX
 github.com/go-mail/mail v2.3.1+incompatible/go.mod h1:VPWjmmNyRsWXQZHVHT3g0YbIINUkSmuKOiLIDkWbL6M=
 github.com/macrat/ayd v0.5.0 h1:1j1VTACDjMl9K/1GSpdQA3EL1xXBho/mpwEXi4SjOZI=
 github.com/macrat/ayd v0.5.0/go.mod h1:Gmx0nvsBqN99Ku2rtkpOeo/UUL/11Q3tCO5hpaUsalI=
+github.com/macrat/ayd v0.6.0 h1:aOLt4j0MBGPF+FuSWuQSkVqVfP2IfmIjRK0NOsTKbr8=
+github.com/macrat/ayd v0.6.0/go.mod h1:Gmx0nvsBqN99Ku2rtkpOeo/UUL/11Q3tCO5hpaUsalI=
 github.com/macrat/go-parallel-pinger v1.0.2 h1:BLWMJUpqDL7G8pxFZXJifTn3YM51eIkIgqtAD56DEHw=
 github.com/macrat/go-parallel-pinger v1.0.2/go.mod h1:s1SWsfXF4LhJmCcnD1P7eTqguyc69yhUzCWDXj8r+VE=
 github.com/robfig/cron/v3 v3.0.1/go.mod h1:eQICP3HwyT7UooqI/z+Ov+PtYAWygg1TEWWzGIFLtro=
