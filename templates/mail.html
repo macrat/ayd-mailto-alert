@@ -8,7 +8,7 @@
         <div style="background-color: #f6f5f8; color: #45414a; margin: auto; padding: 0 0 64px; max-width: 100%; width: 800px">
             <div style="width: 0; height: 0; border: 32px solid transparent; border-color: #45414a transparent transparent #45414a"></div>
 
-            <span style="display: block; font-size: 200%; padding: 0 0 32px">Status "{{ .Status }}" alert</span>
+            <span style="display: block; font-size: 200%; padding: 0 0 32px">{{ if eq .Status "RESOLVED" }}Incident Resolved{{ else }}Status "{{ .Status }}" alert{{ end }}</span>
             <a href="{{ .Target }}" style="font-size: 130%; color: #45414a; font-weight: bold">{{ .Target }}</a><br />{{ if .Message }}
             <span style="font-family: monospace; display: inline-block; background-color: #45414a; color: #f6f5f8; padding: 6px 12px">{{ .Message }}</span><br />{{ end }}
             {{ .CheckedAt }}<br />

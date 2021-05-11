@@ -1,5 +1,7 @@
-Status "{{ .Status }}" alert
-======================
+{{ if eq .Status "RESOLVED" }}Incident Resolved
+=================
+{{ else }}Status "{{ .Status }}" alert
+======================{{ end }}
 
 target: {{ .Target }}
 checked at: {{ .CheckedAt }}{{ if .Message }}

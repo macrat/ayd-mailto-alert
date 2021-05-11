@@ -121,6 +121,10 @@ func main() {
 		Message:    args.Message,
 	}
 
+	if args.Status == ayd.StatusHealthy {
+		ctx.Status = "RESOLVED"
+	}
+
 	html := htmltemplate.Must(htmltemplate.New("mail.html").Parse(htmlTemplate))
 	text := texttemplate.Must(texttemplate.New("mail.txt").Parse(textTemplate))
 
