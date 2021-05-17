@@ -75,7 +75,7 @@ type Context struct {
 func main() {
 	args, err := ayd.ParseAlertPluginArgs()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "$ ayd-mailto-alert MAILTO_URI TARGET_URI TARGET_STATUS TARGET_CHECKED_AT")
+		fmt.Fprintln(os.Stderr, "$ ayd-mailto-alert MAILTO_URI TARGET_URI TARGET_STATUS TARGET_CHECKED_AT MESSAGE")
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
 	}
