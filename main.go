@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "embed"
+	"flag"
 	"fmt"
 	htmltemplate "html/template"
 	"io"
@@ -72,10 +73,23 @@ type Context struct {
 	Message    string
 }
 
+func Usage() {
+	fmt.Fprintln(os.Stderr, "Usage: ayd-mailto-alert MAILTO_URI TARGET_CHECKED_AT TARGET_STATUS TARGET_URI MESSAGE")
+}
+
 func main() {
+	showVersion := flag.Bool("v", false, "show version and exit.")
+	flag.Usage = Usage
+	flag.Parse()
+
+	if *showVersion {
+		fmt.Printf("ayd-mailto-alert %s (%s)\n", version, commit)
+		return
+	}
+
 	args, err := ayd.ParseAlertPluginArgs()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "$ ayd-mailto-alert MAILTO_URI TARGET_CHECKED_AT TARGET_STATUS TARGET_URI MESSAGE")
+		Usage()
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
 	}
