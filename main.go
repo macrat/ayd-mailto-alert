@@ -74,7 +74,7 @@ type Context struct {
 }
 
 func Usage() {
-	fmt.Fprintln(os.Stderr, "Usage: ayd-mailto-alert MAILTO_URI TARGET_CHECKED_AT TARGET_STATUS TARGET_URI MESSAGE")
+	fmt.Fprintln(os.Stderr, "Usage: ayd-mailto-alert MAILTO_URL CHECKED_AT TARGET_STATUS LATENCY TARGET_URL MESSAGE")
 }
 
 func main() {
