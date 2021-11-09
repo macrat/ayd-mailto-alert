@@ -94,7 +94,10 @@ func main() {
 		os.Exit(2)
 	}
 
-	logger := ayd.NewLogger(args.AlertURL)
+	logger := ayd.NewLogger(&url.URL{
+		Scheme: args.AlertURL.Scheme,
+		Opaque: args.AlertURL.Opaque,
+	})
 
 	smtpHost, smtpPort, err := ParseSMTPServer(GetRequiredEnv(logger, "smtp_server"))
 	if err != nil {
