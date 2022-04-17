@@ -9,6 +9,8 @@ github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 h1:El6M4kTTCOh6aBiKaU
 github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510/go.mod h1:pupxD2MaaD3pAXIBCelhxNneeOaAeabZDe5s4K6zSpQ=
 github.com/macrat/ayd v0.12.0 h1:AC6JuMlesI+TDj7EDtq0EbkPrUCljD0tPZJwKsm7jyk=
 github.com/macrat/ayd v0.12.0/go.mod h1:Mk60nlQjdSgGqughy7wTiK0m3rFIelHemGevF3Q93UI=
+github.com/macrat/ayd v0.13.3 h1:rLO/2yoCccOBTaN8AXgYaMK9eu3cdRMZYxxTOvCp2nA=
+github.com/macrat/ayd v0.13.3/go.mod h1:dfRZ56ol3gCMdufHp7B7Ca3g6vKDh4ZV9oHEA+e+wvU=
 github.com/macrat/go-parallel-pinger v1.1.2 h1:qw/qA+iHFUaXy2iM+fkQivll6YhCd+Jui6ceWxNNyOY=
 github.com/macrat/go-parallel-pinger v1.1.2/go.mod h1:Sb734FetI568lFoNWSXiTTk8TUoShrh+1ISP9+vs+Gg=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
