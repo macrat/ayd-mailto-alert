@@ -5,6 +5,8 @@ github.com/go-mail/mail v2.3.1+incompatible h1:UzNOn0k5lpfVtO31cK3hn6I4VEVGhe3lX
 github.com/go-mail/mail v2.3.1+incompatible/go.mod h1:VPWjmmNyRsWXQZHVHT3g0YbIINUkSmuKOiLIDkWbL6M=
 github.com/google/go-cmp v0.5.6 h1:BKbKCqvP6I+rmFHt06ZmyQtvB8xAkWdhFyr0ZUNZcxQ=
 github.com/google/go-cmp v0.5.6/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
+github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 h1:El6M4kTTCOh6aBiKaUGG7oYTSPP8MxqL4YI3kZKwcP4=
+github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510/go.mod h1:pupxD2MaaD3pAXIBCelhxNneeOaAeabZDe5s4K6zSpQ=
 github.com/macrat/ayd v0.12.0 h1:AC6JuMlesI+TDj7EDtq0EbkPrUCljD0tPZJwKsm7jyk=
 github.com/macrat/ayd v0.12.0/go.mod h1:Mk60nlQjdSgGqughy7wTiK0m3rFIelHemGevF3Q93UI=
 github.com/macrat/go-parallel-pinger v1.1.2 h1:qw/qA+iHFUaXy2iM+fkQivll6YhCd+Jui6ceWxNNyOY=

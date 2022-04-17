@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	_ "embed"
+	"errors"
 	"flag"
 	"fmt"
 	htmltemplate "html/template"
@@ -10,12 +12,14 @@ import (
 	"net/mail"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	texttemplate "text/template"
 	"time"
 
 	gomail "github.com/go-mail/mail"
+	"github.com/google/shlex"
 	"github.com/macrat/ayd/lib-ayd"
 )
 
@@ -30,7 +34,7 @@ var htmlTemplate string
 //go:embed templates/mail.txt
 var textTemplate string
 
-func ParseSMTPServer(s string) (host string, port int, err error) {
+func ParseHost(s string) (host string, port int, err error) {
 	host, p, err := net.SplitHostPort(s)
 	if err != nil {
 		return "", 0, err
@@ -45,6 +49,38 @@ func ParseSMTPServer(s string) (host string, port int, err error) {
 	return host, port, nil
 }
 
+func ParseURL(s string) (host string, port int, ssl bool, err error) {
+	u, err := url.Parse(s)
+	if err != nil {
+		return
+	}
+
+	switch u.Scheme {
+	case "smtp":
+		ssl = false
+	case "smtps":
+		ssl = true
+	default:
+		err = fmt.Errorf("unsupported protocol: '%s'", u.Scheme)
+		return
+	}
+
+	if u.Port() == "" {
+		if ssl {
+			u.Host += ":465"
+		} else {
+			u.Host += ":25"
+		}
+	}
+
+	host, port, err = ParseHost(u.Host)
+	if err != nil {
+		return "", 0, false, err
+	}
+
+	return
+}
+
 func GetEnv(key string, default_ string) string {
 	value := os.Getenv(strings.ToLower(key))
 	if value == "" {
@@ -56,13 +92,120 @@ func GetEnv(key string, default_ string) string {
 	return value
 }
 
-func GetRequiredEnv(logger ayd.Logger, key string) string {
-	value := GetEnv(key, "")
-	if value == "" {
-		logger.Failure(fmt.Sprintf("Environment variable `%s` is required", key))
-		os.Exit(0)
+type Config struct {
+	Host     string
+	Port     int
+	SSL      bool
+	Username string
+	Password string
+	From     *mail.Address
+}
+
+func LoadConfig() (Config, error) {
+	conf := Config{SSL: true, From: &mail.Address{"Ayd? Alert", "ayd@localhost"}}
+
+	pathes := []string{"/usr/share/misc/mail.rc", "/usr/local/etc/mail.rc", "/etc/mail.rc"}
+	if home, err := os.UserHomeDir(); err == nil {
+		pathes = append(pathes, filepath.Join(home, ".mailrc"))
 	}
-	return value
+
+	for _, p := range pathes {
+		if f, err := os.Open(p); err == nil {
+			fmt.Println("load", p, pathes)
+			if err = conf.LoadFile(f); err != nil {
+				return conf, err
+			}
+		}
+	}
+
+	if err := conf.LoadEnv(); err != nil {
+		return conf, err
+	}
+
+	if conf.Host == "" {
+		return conf, errors.New("SMTP_SERVER is required")
+	}
+	if conf.Username == "" {
+		return conf, errors.New("SMTP_USERNAME is required")
+	}
+	if conf.Password == "" {
+		return conf, errors.New("SMTP_PASSWORD is required")
+	}
+
+	return conf, nil
+}
+
+func (conf *Config) LoadFile(f io.Reader) error {
+	scanner := bufio.NewScanner(f)
+
+	for scanner.Scan() {
+		xs, err := shlex.Split(scanner.Text())
+		if err != nil {
+			return err
+		}
+
+		if len(xs) < 2 || xs[0] != "set" {
+			continue
+		}
+
+		for _, s := range xs[1:] {
+			kv := strings.SplitN(s, "=", 2)
+			if len(kv) != 2 {
+				continue
+			}
+
+			key := strings.TrimSpace(kv[0])
+			value := strings.TrimSpace(strings.SplitN(kv[1], " #", 2)[0])
+
+			switch key {
+			case "smtp":
+				conf.Host, conf.Port, conf.SSL, err = ParseURL(value)
+				if err != nil {
+					return err
+				}
+			case "smtp-auth-user":
+				conf.Username = value
+			case "smtp-auth-password":
+				conf.Password = value
+			case "from":
+				conf.From, err = mail.ParseAddress(value)
+				if err != nil {
+					return err
+				}
+			default:
+				continue
+			}
+		}
+	}
+
+	return scanner.Err()
+}
+
+func (conf *Config) LoadEnv() error {
+	var err error
+
+	if server := GetEnv("smtp_server", ""); server != "" {
+		conf.Host, conf.Port, err = ParseHost(server)
+		if err != nil {
+			return fmt.Errorf("environment variable `smtp_server` is invalid: %s", err)
+		}
+	}
+
+	if username := GetEnv("smtp_username", ""); username != "" {
+		conf.Username = username
+	}
+	if password := GetEnv("smtp_password", ""); password != "" {
+		conf.Password = password
+	}
+
+	if from := GetEnv("ayd_mail_from", ""); from != "" {
+		conf.From, err = mail.ParseAddress(from)
+		if err != nil {
+			return fmt.Errorf("environment variable `ayd_mail_from` is invalid: %s", err)
+		}
+	}
+
+	return nil
 }
 
 type Context struct {
@@ -99,17 +242,9 @@ func main() {
 		Opaque: args.AlertURL.Opaque,
 	})
 
-	smtpHost, smtpPort, err := ParseSMTPServer(GetRequiredEnv(logger, "smtp_server"))
+	conf, err := LoadConfig()
 	if err != nil {
-		logger.Failure(fmt.Sprintf("environment variable `smtp_server` is invalid: %s", err))
-		return
-	}
-	smtpUsername := GetRequiredEnv(logger, "smtp_username")
-	smtpPassword := GetRequiredEnv(logger, "smtp_password")
-
-	from, err := mail.ParseAddress(GetEnv("ayd_mail_from", "Ayd? Alert <ayd@localhost>"))
-	if err != nil {
-		logger.Failure(fmt.Sprintf("environment variable `ayd_mail_from` is invalid: %s", err))
+		logger.Failure(err.Error())
 		return
 	}
 
@@ -146,7 +281,7 @@ func main() {
 	text := texttemplate.Must(texttemplate.New("mail.txt").Parse(textTemplate))
 
 	msg := gomail.NewMessage()
-	msg.SetAddressHeader("From", from.Address, from.Name)
+	msg.SetAddressHeader("From", conf.From.Address, conf.From.Name)
 	for _, t := range to {
 		msg.SetAddressHeader("To", t.Address, t.Name)
 	}
@@ -158,8 +293,12 @@ func main() {
 		return html.Execute(w, ctx)
 	})
 
-	dialer := gomail.NewDialer(smtpHost, smtpPort, smtpUsername, smtpPassword)
-	dialer.StartTLSPolicy = gomail.MandatoryStartTLS
+	dialer := gomail.NewDialer(conf.Host, conf.Port, conf.Username, conf.Password)
+	if conf.SSL {
+		dialer.StartTLSPolicy = gomail.MandatoryStartTLS
+	} else {
+		dialer.StartTLSPolicy = gomail.OpportunisticStartTLS
+	}
 
 	if err := dialer.DialAndSend(msg); err != nil {
 		logger.Failure(fmt.Sprintf("failed to send e-mail: %s", err))

@@ -13,6 +13,22 @@ SMTP email alert sender for [Ayd?](https://github.com/macrat/ayd) status monitor
 
 ## Usage
 
+### Use mailrc
+
+``` shell
+$ cat ~/.mailrc
+set smtp=smtps://smtp.gmail.com
+set smtp-auth-user="your username"
+set smtp-auth-password="your password"
+set from="your name <your-mail@example.com>"
+
+$ export AYD_URL="http://ayd-external-url.example.com"
+
+$ ayd -a mailto:your-email@example.com ping:your-target.example.com
+```
+
+### Use environment variable
+
 ``` shell
 $ export SMTP_SERVER=smtp.gmail.com:465
 $ export SMTP_USERNAME=<< your username >>

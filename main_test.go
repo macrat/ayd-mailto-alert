@@ -1,40 +1,58 @@
 package main_test
 
 import (
+	"net/mail"
+	"strings"
 	"testing"
 
 	"github.com/macrat/ayd-mailto-alert"
 )
 
-func TestParseSMTPServer(t *testing.T) {
+func TestParseURL(t *testing.T) {
 	tests := []struct {
 		Input string
 		Host  string
 		Port  int
+		SSL   bool
 		Error string
 	}{
 		{
-			Input: "smtp.gmail.com:465",
+			Input: "smtps://smtp.gmail.com:465",
 			Host:  "smtp.gmail.com",
 			Port:  465,
+			SSL:   true,
 		},
 		{
-			Input: "smtp.gmail.com",
-			Error: "address smtp.gmail.com: missing port in address",
+			Input: "smtp://example.com:25",
+			Host:  "example.com",
+			Port:  25,
+			SSL:   false,
 		},
 		{
-			Input: ":465",
+			Input: "smtps://smtp.gmail.com",
+			Host:  "smtp.gmail.com",
+			Port:  465,
+			SSL:   true,
+		},
+		{
+			Input: "smtp://example.com",
+			Host:  "example.com",
+			Port:  25,
+			SSL:   false,
+		},
+		{
+			Input: "smtps://:465",
 			Error: "address :465: missing host in address",
 		},
 		{
-			Input: "",
-			Error: "missing port in address",
+			Input: "http://example.com",
+			Error: "unsupported protocol: 'http'",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.Input, func(t *testing.T) {
-			host, port, err := main.ParseSMTPServer(tt.Input)
+			host, port, ssl, err := main.ParseURL(tt.Input)
 
 			if err != nil {
 				if tt.Error == "" {
@@ -53,6 +71,84 @@ func TestParseSMTPServer(t *testing.T) {
 			if port != tt.Port {
 				t.Errorf("expected port is %#v but got %#v", tt.Port, port)
 			}
+
+			if ssl != tt.SSL {
+				t.Errorf("expected ssl is %#v but got %#v", tt.SSL, ssl)
+			}
 		})
+	}
+}
+
+func TestConfig_LoadFile(t *testing.T) {
+	tests := []struct {
+		Input  []string
+		Expect main.Config
+	}{
+		{
+			[]string{
+				`set smtp=smtps://smtp.gmail.com:465`,
+				`set smtp-auth-user=hello`,
+				`set smtp-auth-password=world`,
+				`set from="me <me@example.com>"`,
+			},
+			main.Config{
+				Host:     "smtp.gmail.com",
+				Port:     465,
+				SSL:      true,
+				Username: "hello",
+				Password: "world",
+				From:     &mail.Address{Name: "me", Address: "me@example.com"},
+			},
+		},
+		{
+			[]string{
+				`# comment`,
+				`set unknown=option`,
+				`alias hoge fuga`,
+				`set smtp=smtp://example.com/foo/bar smtp-auth-user="it's me" smtp-auth-password="secret"`,
+				`set from=me<me@example.com>  # comment`,
+			},
+			main.Config{
+				Host:     "example.com",
+				Port:     25,
+				SSL:      false,
+				Username: "it's me",
+				Password: "secret",
+				From:     &mail.Address{Name: "me", Address: "me@example.com"},
+			},
+		},
+	}
+
+	for i, tt := range tests {
+		var c main.Config
+
+		if err := c.LoadFile(strings.NewReader(strings.Join(tt.Input, "\n"))); err != nil {
+			t.Errorf("%d: failed to parse: %s", i, err)
+			continue
+		}
+
+		if c.Host != tt.Expect.Host {
+			t.Errorf("%d: expected host %#v but got %#v", i, tt.Expect.Host, c.Host)
+		}
+
+		if c.Port != tt.Expect.Port {
+			t.Errorf("%d: expected port %#v but got %#v", i, tt.Expect.Port, c.Port)
+		}
+
+		if c.SSL != tt.Expect.SSL {
+			t.Errorf("%d: expected ssl %#v but got %#v", i, tt.Expect.SSL, c.SSL)
+		}
+
+		if c.Username != tt.Expect.Username {
+			t.Errorf("%d: expected username %#v but got %#v", i, tt.Expect.Username, c.Username)
+		}
+
+		if c.Password != tt.Expect.Password {
+			t.Errorf("%d: expected password %#v but got %#v", i, tt.Expect.Password, c.Password)
+		}
+
+		if c.From == nil || c.From.String() != tt.Expect.From.String() {
+			t.Errorf("%d: expected from %#v but got %#v", i, tt.Expect.From, c.From)
+		}
 	}
 }
