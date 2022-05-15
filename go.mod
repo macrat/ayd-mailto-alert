@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/go-mail/mail v2.3.1+incompatible
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
-	github.com/macrat/ayd v0.13.3
+	github.com/macrat/ayd v0.14.0
 )
 
 require (
