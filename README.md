@@ -1,7 +1,7 @@
-Ayd? Mailto Alert
-=================
+ayd-mailto-alert
+================
 
-SMTP email alert sender for [Ayd?](https://github.com/macrat/ayd) status monitoring service.
+SMTP email alert sender for [Ayd](https://github.com/macrat/ayd) alive monitoring tool.
 
 
 ## Install
