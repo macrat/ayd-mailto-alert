@@ -246,7 +246,7 @@ func main() {
 	extra := map[string]interface{}{}
 	if conf.Host != "" {
 		extra["smtp_server"] = conf.Host
-		extra["from_address"] = conf.From
+		extra["from_address"] = conf.From.String()
 	}
 	if err != nil {
 		logger.Failure(err.Error(), extra)
@@ -279,7 +279,7 @@ func main() {
 	}
 
 	if len(args.Extra) != 0 {
-		if bs, err := json.MarshalIndent(args.Extra, "", "  "); err != nil {
+		if bs, err := json.MarshalIndent(args.Extra, "", "  "); err == nil {
 			if ctx.Message != "" {
 				ctx.Message += "\n\n"
 			}
