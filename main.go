@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	_ "embed"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -111,7 +112,6 @@ func LoadConfig() (Config, error) {
 
 	for _, p := range pathes {
 		if f, err := os.Open(p); err == nil {
-			fmt.Println("load", p, pathes)
 			if err = conf.LoadFile(f); err != nil {
 				return conf, err
 			}
@@ -217,7 +217,7 @@ type Context struct {
 }
 
 func Usage() {
-	fmt.Fprintln(os.Stderr, "Usage: ayd-mailto-alert MAILTO_URL CHECKED_AT TARGET_STATUS LATENCY TARGET_URL MESSAGE")
+	fmt.Fprintln(os.Stderr, "Usage: ayd-mailto-alert MAILTO_URL CHECKED_AT TARGET_STATUS LATENCY TARGET_URL MESSAGE EXTRA_VALUES")
 }
 
 func main() {
@@ -237,31 +237,36 @@ func main() {
 		os.Exit(2)
 	}
 
-	logger := ayd.NewLogger(&url.URL{
+	logger := ayd.NewLogger(&ayd.URL{
 		Scheme: args.AlertURL.Scheme,
 		Opaque: args.AlertURL.Opaque,
 	})
 
 	conf, err := LoadConfig()
+	extra := map[string]interface{}{}
+	if conf.Host != "" {
+		extra["smtp_server"] = conf.Host
+		extra["from_address"] = conf.From
+	}
 	if err != nil {
-		logger.Failure(err.Error())
+		logger.Failure(err.Error(), extra)
 		return
 	}
 
 	to, err := mail.ParseAddressList(args.AlertURL.Opaque)
 	if err != nil {
-		logger.Failure(fmt.Sprintf("mail address is invalid: %s", err))
+		logger.Failure(fmt.Sprintf("mail address is invalid: %s", err), extra)
 		return
 	}
 
 	aydURL, err := url.Parse(GetEnv("ayd_url", "http://localhost:9000"))
 	if err != nil {
-		logger.Failure(fmt.Sprintf("environment variable `ayd_url` is invalid: %s", err))
+		logger.Failure(fmt.Sprintf("environment variable `ayd_url` is invalid: %s", err), extra)
 		return
 	}
 	statusPage, err := aydURL.Parse("status.html")
 	if err != nil {
-		logger.Failure(fmt.Sprintf("failed to generate status page URL: %s", err))
+		logger.Failure(fmt.Sprintf("failed to generate status page URL: %s", err), extra)
 		return
 	}
 
@@ -269,8 +274,17 @@ func main() {
 		StatusPage: statusPage.String(),
 		Target:     args.TargetURL.String(),
 		Status:     args.Status.String(),
-		CheckedAt:  args.CheckedAt.Format(time.RFC3339),
+		CheckedAt:  args.Time.Format(time.RFC3339),
 		Message:    args.Message,
+	}
+
+	if len(args.Extra) != 0 {
+		if bs, err := json.MarshalIndent(args.Extra, "", "  "); err != nil {
+			if ctx.Message != "" {
+				ctx.Message += "\n\n"
+			}
+			ctx.Message += string(bs)
+		}
 	}
 
 	if args.Status == ayd.StatusHealthy {
@@ -301,9 +315,9 @@ func main() {
 	}
 
 	if err := dialer.DialAndSend(msg); err != nil {
-		logger.Failure(fmt.Sprintf("failed to send e-mail: %s", err))
+		logger.Failure(fmt.Sprintf("failed to send e-mail: %s", err), extra)
 		return
 	}
 
-	logger.Healthy(fmt.Sprintf("sent alert to %s", to))
+	logger.Healthy(fmt.Sprintf("sent alert to %s", to), extra)
 }
