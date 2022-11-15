@@ -252,3 +252,72 @@ func TestConfig_LoadFile(t *testing.T) {
 		}
 	}
 }
+
+func FuzzConfig_LoadFile(f *testing.F) {
+	f.Add(strings.Join([]string{
+		`set smtp=smtps://smtp.gmail.com:465`,
+		`set smtp-auth-user=hello`,
+		`set smtp-auth-password=world`,
+		`set from="me <me@example.com>"`,
+	}, "\n"))
+	f.Add(strings.Join([]string{
+		`set from="me <me@example.com>, you <you@example.com>"`,
+		`set smtp-auth-password=bar smtp-auth-user=foo`,
+		`set smtp=smtp://smtp.gmail.com:25`,
+		``,
+	}, "\n"))
+	f.Add(strings.Join([]string{
+		`# comment`,
+		`set unknown=option`,
+		``,
+		`alias hoge fuga`,
+		`set smtp=smtp://example.com/foo/bar smtp-auth-user="it's me" smtp-auth-password="secret"`,
+		`set from=me<me@example.com>  # comment`,
+	}, "\n"))
+	f.Add(strings.Join([]string{
+		`set smtp-auth-password="bar"`,
+		`set smtp-auth-user="foo bar"`,
+		`set smtp=smtp://smtp.gmail.com:25`,
+		`set unknown=123`,
+		``,
+	}, "\n"))
+	f.Add(strings.Join([]string{
+		`set smtp-auth-password="bar"`,
+		`set smtp-auth-user="foo bar"`,
+		`set smtp=smtps://smtp.gmail.com:1234`,
+		`set from=me@example.com`,
+		`set `,
+	}, "\n"))
+	f.Add(strings.Join([]string{
+		``,
+		`set smtp=smtps://smtp.gmail.com:1234`,
+	}, "\n"))
+	f.Add(strings.Join([]string{
+		``,
+	}, "\n"))
+	f.Add(strings.Join([]string{
+		`sad smtp=smtps://smtp.gmail.com:1234`,
+		`wah smtp-auth-user=abc`,
+		`set smtp-auth-pass=oops`,
+	}, "\n"))
+
+	f.Fuzz(func(t *testing.T, conf string) {
+		var c main.Config
+
+		err := c.LoadFile(strings.NewReader(conf))
+		if err != nil {
+			return
+		}
+
+		if c.Host != "" && c.Port == 0 {
+			t.Errorf("host has set but port has not")
+		}
+		if c.Host == "" && c.Port > 0 {
+			t.Errorf("port has set but host has not")
+		}
+
+		if c.From != nil && c.From.String() == "" {
+			t.Errorf("got invalid from address: %v", c.From)
+		}
+	})
+}
