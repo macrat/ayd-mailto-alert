@@ -1,6 +1,7 @@
 package main_test
 
 import (
+	"fmt"
 	"net/mail"
 	"strings"
 	"testing"
@@ -74,6 +75,105 @@ func TestParseURL(t *testing.T) {
 
 			if ssl != tt.SSL {
 				t.Errorf("expected ssl is %#v but got %#v", tt.SSL, ssl)
+			}
+		})
+	}
+}
+
+func TestLoadConfigByPath(t *testing.T) {
+	tests := []struct {
+		Envs   map[string]string
+		Expect main.Config
+		Error  string
+	}{
+		{
+			nil,
+			main.Config{},
+			"SMTP_SERVER is required",
+		},
+		{
+			map[string]string{
+				"SMTP_SERVER": "example.com:25",
+			},
+			main.Config{},
+			"SMTP_USERNAME is required",
+		},
+		{
+			map[string]string{
+				"SMTP_SERVER":   "example.com:25",
+				"SMTP_USERNAME": "foo",
+			},
+			main.Config{},
+			"SMTP_PASSWORD is required",
+		},
+		{
+			map[string]string{
+				"SMTP_SERVER":   "example.com:25",
+				"SMTP_USERNAME": "foo",
+				"SMTP_PASSWORD": "bar",
+			},
+			main.Config{
+				Host:     "example.com",
+				Port:     25,
+				SSL:      true,
+				Username: "foo",
+				Password: "bar",
+				From:     &mail.Address{Name: "Ayd? Alert", Address: "ayd@localhost"},
+			},
+			"",
+		},
+		{
+			map[string]string{
+				"SMTP_SERVER":   "example.com:25",
+				"SMTP_USERNAME": "foo",
+				"SMTP_PASSWORD": "bar",
+				"AYD_MAIL_FROM": "baz",
+			},
+			main.Config{},
+			"environment variable `ayd_mail_from` is invalid: mail: missing '@' or angle-addr",
+		},
+	}
+
+	for i, tt := range tests {
+		t.Run(fmt.Sprint(i), func(t *testing.T) {
+			for k, v := range tt.Envs {
+				t.Setenv(k, v)
+			}
+
+			c, err := main.LoadConfigByPath(nil)
+			if tt.Error != "" {
+				if err == nil || err.Error() != tt.Error {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				return
+			} else {
+				if err != nil {
+					t.Fatalf("unexpected error: %s", err)
+				}
+			}
+
+			if c.Host != tt.Expect.Host {
+				t.Errorf("expected host %#v but got %#v", tt.Expect.Host, c.Host)
+			}
+
+			if c.Port != tt.Expect.Port {
+				t.Errorf("expected port %#v but got %#v", tt.Expect.Port, c.Port)
+			}
+
+			if c.SSL != tt.Expect.SSL {
+				t.Errorf("expected ssl %#v but got %#v", tt.Expect.SSL, c.SSL)
+			}
+
+			if c.Username != tt.Expect.Username {
+				t.Errorf("expected username %#v but got %#v", tt.Expect.Username, c.Username)
+			}
+
+			if c.Password != tt.Expect.Password {
+				t.Errorf("expected password %#v but got %#v", tt.Expect.Password, c.Password)
+			}
+
+			if c.From == nil || c.From.String() != tt.Expect.From.String() {
+				t.Errorf("expected from %#v but got %#v", tt.Expect.From, c.From)
 			}
 		})
 	}

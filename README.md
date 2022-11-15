@@ -20,7 +20,7 @@ $ cat ~/.mailrc
 set smtp=smtps://smtp.gmail.com
 set smtp-auth-user="your username"
 set smtp-auth-password="your password"
-set from="your name <your-mail@example.com>"
+set from="your name <your-email@example.com>"
 
 $ export AYD_URL="http://ayd-external-url.example.com"
 

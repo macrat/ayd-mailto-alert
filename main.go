@@ -103,12 +103,16 @@ type Config struct {
 }
 
 func LoadConfig() (Config, error) {
-	conf := Config{SSL: true, From: &mail.Address{"Ayd? Alert", "ayd@localhost"}}
-
 	pathes := []string{"/usr/share/misc/mail.rc", "/usr/local/etc/mail.rc", "/etc/mail.rc"}
 	if home, err := os.UserHomeDir(); err == nil {
 		pathes = append(pathes, filepath.Join(home, ".mailrc"))
 	}
+
+	return LoadConfigByPath(pathes)
+}
+
+func LoadConfigByPath(pathes []string) (Config, error) {
+	conf := Config{SSL: true, From: &mail.Address{"Ayd? Alert", "ayd@localhost"}}
 
 	for _, p := range pathes {
 		if f, err := os.Open(p); err == nil {
