@@ -1,6 +1,6 @@
 module github.com/macrat/ayd-mailto-alert
 
-go 1.18
+go 1.19
 
 require (
 	github.com/go-mail/mail v2.3.1+incompatible
