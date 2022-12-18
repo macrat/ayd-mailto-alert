@@ -221,7 +221,7 @@ type Context struct {
 }
 
 func Usage() {
-	fmt.Fprintln(os.Stderr, "Usage: ayd-mailto-alert MAILTO_URL CHECKED_AT TARGET_STATUS LATENCY TARGET_URL MESSAGE EXTRA_VALUES")
+	fmt.Fprintln(os.Stderr, "Usage: ayd-mailto-alert MAILTO_URL RECORD")
 }
 
 func main() {
@@ -234,16 +234,26 @@ func main() {
 		return
 	}
 
-	args, err := ayd.ParseAlertPluginArgs()
-	if err != nil {
+	if len(os.Args) != 2 {
 		Usage()
+		os.Exit(2)
+	}
+	alertURL, err := ayd.ParseURL(os.Args[1])
+	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
+		Usage()
+		os.Exit(2)
+	}
+	record, err := ayd.ParseRecord(os.Args[2])
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		Usage()
 		os.Exit(2)
 	}
 
 	logger := ayd.NewLogger(&ayd.URL{
-		Scheme: args.AlertURL.Scheme,
-		Opaque: args.AlertURL.Opaque,
+		Scheme: alertURL.Scheme,
+		Opaque: alertURL.Opaque,
 	})
 
 	conf, err := LoadConfig()
@@ -257,7 +267,7 @@ func main() {
 		return
 	}
 
-	to, err := mail.ParseAddressList(args.AlertURL.Opaque)
+	to, err := mail.ParseAddressList(alertURL.Opaque)
 	if err != nil {
 		logger.Failure(fmt.Sprintf("mail address is invalid: %s", err), extra)
 		return
@@ -276,14 +286,14 @@ func main() {
 
 	ctx := Context{
 		StatusPage: statusPage.String(),
-		Target:     args.TargetURL.String(),
-		Status:     args.Status.String(),
-		CheckedAt:  args.Time.Format(time.RFC3339),
-		Message:    args.Message,
+		Target:     alertURL.String(),
+		Status:     record.Status.String(),
+		CheckedAt:  record.Time.Format(time.RFC3339),
+		Message:    record.Message,
 	}
 
-	if len(args.Extra) != 0 {
-		if bs, err := json.MarshalIndent(args.Extra, "", "  "); err == nil {
+	if len(record.Extra) != 0 {
+		if bs, err := json.MarshalIndent(record.Extra, "", "  "); err == nil {
 			if ctx.Message != "" {
 				ctx.Message += "\n\n"
 			}
@@ -291,7 +301,7 @@ func main() {
 		}
 	}
 
-	if args.Status == ayd.StatusHealthy {
+	if record.Status == ayd.StatusHealthy {
 		ctx.Status = "RESOLVED"
 	}
 
