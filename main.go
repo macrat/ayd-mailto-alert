@@ -286,7 +286,7 @@ func main() {
 
 	ctx := Context{
 		StatusPage: statusPage.String(),
-		Target:     alertURL.String(),
+		Target:     record.Target.String(),
 		Status:     record.Status.String(),
 		CheckedAt:  record.Time.Format(time.RFC3339),
 		Message:    record.Message,
