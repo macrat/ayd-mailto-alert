@@ -18,10 +18,10 @@ import (
 	texttemplate "text/template"
 	"time"
 
-	gomail "github.com/go-mail/mail"
 	"github.com/google/shlex"
 	"github.com/google/uuid"
 	"github.com/macrat/ayd/lib-ayd"
+	gomail "github.com/wneessen/go-mail"
 )
 
 var (
@@ -306,30 +306,50 @@ func main() {
 		ctx.Status = "RESOLVED"
 	}
 
-	html := htmltemplate.Must(htmltemplate.New("mail.html").Parse(htmlTemplate))
 	text := texttemplate.Must(texttemplate.New("mail.txt").Parse(textTemplate))
+	html := htmltemplate.Must(htmltemplate.New("mail.html").Parse(htmlTemplate))
 
-	msg := gomail.NewMessage()
-	msg.SetAddressHeader("From", conf.From.Address, conf.From.Name)
+	msg := gomail.NewMsg()
+	msg.FromFormat(conf.From.Name, conf.From.Address)
 	for _, t := range to {
-		msg.SetAddressHeader("To", t.Address, t.Name)
+		msg.AddToFormat(t.Name, t.Address)
 	}
-	msg.SetHeader("Subject", fmt.Sprintf("[%s] %s", ctx.Status, ctx.Target))
-	msg.SetBodyWriter("text/text", func(w io.Writer) error {
-		return text.Execute(w, ctx)
-	})
-	msg.AddAlternativeWriter("text/html", func(w io.Writer) error {
-		return html.Execute(w, ctx)
-	})
+	msg.SetGenHeader("Subject", fmt.Sprintf("[%s] %s", ctx.Status, ctx.Target))
+	msg.SetDateWithValue(record.Time)
+	msg.SetUserAgent(fmt.Sprintf("ayd-mailto-alert/%s", version))
 
-	dialer := gomail.NewDialer(conf.Host, conf.Port, conf.Username, conf.Password)
+	if err := msg.AddAlternativeTextTemplate(text, ctx, gomail.WithPartCharset(gomail.CharsetUTF8)); err != nil {
+		logger.Failure(fmt.Sprintf("failed to set text body: %s", err), extra)
+		return
+	}
+
+	if err := msg.AddAlternativeHTMLTemplate(html, ctx, gomail.WithPartCharset(gomail.CharsetUTF8)); err != nil {
+		logger.Failure(fmt.Sprintf("failed to set HTML body: %s", err), extra)
+		return
+	}
+
+	client, err := gomail.NewClient(
+		conf.Host,
+		gomail.WithPort(conf.Port),
+		gomail.WithSSLPort(true),
+		gomail.WithUsername(conf.Username),
+		gomail.WithPassword(conf.Password),
+	)
+	if err != nil {
+		logger.Failure(fmt.Sprintf("failed to initialize SMTP client: %s", err), extra)
+		return
+	}
+	defer client.Close()
+
 	if conf.SSL {
-		dialer.StartTLSPolicy = gomail.MandatoryStartTLS
+		client.SetTLSPolicy(gomail.TLSMandatory)
 	} else {
-		dialer.StartTLSPolicy = gomail.OpportunisticStartTLS
+		client.SetTLSPolicy(gomail.TLSOpportunistic)
 	}
 
-	if err := dialer.DialAndSend(msg); err != nil {
+	client.SetSMTPAuth(gomail.SMTPAuthPlain)
+
+	if err := client.DialAndSend(msg); err != nil {
 		logger.Failure(fmt.Sprintf("failed to send e-mail: %s", err), extra)
 		return
 	}

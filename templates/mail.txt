@@ -8,6 +8,7 @@ checked at: {{ .CheckedAt }}{{ if .Message }}
 
 {{ .Message }}{{ end }}{{ if .Extra }}
 
-{{ each .Extra }}{{ .Key }}: {{ .Value }}{{ end }}{{ end }}{{ if .StatusPage }}
+{{ range .Extra }}{{ .Key }}: {{ .Value }}
+{{ end }}{{ end }}{{ if .StatusPage }}
 
 {{ .StatusPage }}{{ end }}
