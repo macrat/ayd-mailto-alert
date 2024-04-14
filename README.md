@@ -43,10 +43,10 @@ $ ayd -a mailto:your-email@example.com ping:your-target.example.com
 
 Set all options through environment variable.
 
-|Variable       |Default                     |Description               |
-|---------------|----------------------------|--------------------------|
-|`SMTP_SERVER`  |                            |SMTP server name and port.|
-|`SMTP_USERNAME`|                            |User name for SMTP server.|
-|`SMTP_PASSWORD`|                            |Password for SMTP server. |
-|`AYD_URL`      |`http://localhost:9000`     |Ayd server address.       |
-|`AYD_MAIL_FROM`|`Ayd? Alert <ayd@localhost>`|The From email address.   |
+| Variable        | Default                     | Description                        |
+|-----------------|-----------------------------|------------------------------------|
+| `SMTP_SERVER`   |                             | SMTP server name and port.         |
+| `SMTP_USERNAME` |                             | User name for SMTP server.         |
+| `SMTP_PASSWORD` |                             | Password for SMTP server.          |
+| `AYD_URL`       |                             | Ayd server address. (optional)     |
+| `AYD_MAIL_FROM` | `Ayd Alert <ayd@localhost>` | The From email address. (optional) |

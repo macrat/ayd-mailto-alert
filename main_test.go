@@ -118,7 +118,7 @@ func TestLoadConfigByPath(t *testing.T) {
 				SSL:      true,
 				Username: "foo",
 				Password: "bar",
-				From:     &mail.Address{Name: "Ayd? Alert", Address: "ayd@localhost"},
+				From:     &mail.Address{Name: "Ayd Alert", Address: "ayd@localhost"},
 			},
 			"",
 		},

@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	_ "embed"
-	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -21,6 +20,7 @@ import (
 
 	gomail "github.com/go-mail/mail"
 	"github.com/google/shlex"
+	"github.com/google/uuid"
 	"github.com/macrat/ayd/lib-ayd"
 )
 
@@ -221,6 +221,7 @@ type Context struct {
 	CheckedAt  string
 	Status     string
 	Message    string
+	Extra      []ayd.ExtraPair
 }
 
 func Usage() {
@@ -276,32 +277,29 @@ func main() {
 		return
 	}
 
-	aydURL, err := url.Parse(GetEnv("ayd_url", "http://localhost:9000"))
-	if err != nil {
-		logger.Failure(fmt.Sprintf("environment variable `ayd_url` is invalid: %s", err), extra)
-		return
-	}
-	statusPage, err := aydURL.Parse("status.html")
-	if err != nil {
-		logger.Failure(fmt.Sprintf("failed to generate status page URL: %s", err), extra)
-		return
+	var statusPage string
+	if rawURL := GetEnv("ayd_url", ""); rawURL != "" {
+		aydURL, err := url.Parse(rawURL)
+		if err != nil {
+			logger.Failure(fmt.Sprintf("environment variable `ayd_url` is invalid: %s", err), extra)
+			return
+		}
+		pageURL, err := aydURL.Parse("status.html")
+		if err != nil {
+			logger.Failure(fmt.Sprintf("failed to generate status page URL: %s", err), extra)
+			return
+		}
+		pageURL.Fragment = uuid.NewSHA1(uuid.NameSpaceURL, []byte(record.Target.String())).String()
+		statusPage = pageURL.String()
 	}
 
 	ctx := Context{
-		StatusPage: statusPage.String(),
+		StatusPage: statusPage,
 		Target:     record.Target.String(),
 		Status:     record.Status.String(),
 		CheckedAt:  record.Time.Format(time.RFC3339),
 		Message:    record.Message,
-	}
-
-	if len(record.Extra) != 0 {
-		if bs, err := json.MarshalIndent(record.Extra, "", "  "); err == nil {
-			if ctx.Message != "" {
-				ctx.Message += "\n\n"
-			}
-			ctx.Message += string(bs)
-		}
+		Extra:      record.ReadableExtra(),
 	}
 
 	if record.Status == ayd.StatusHealthy {

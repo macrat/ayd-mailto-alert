@@ -6,6 +6,8 @@
 target: {{ .Target }}
 checked at: {{ .CheckedAt }}{{ if .Message }}
 
-{{ .Message }}{{ end }}
+{{ .Message }}{{ end }}{{ if .Extra }}
 
-{{ .StatusPage }}
+{{ each .Extra }}{{ .Key }}: {{ .Value }}{{ end }}{{ end }}{{ if .StatusPage }}
+
+{{ .StatusPage }}{{ end }}

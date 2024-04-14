@@ -4,20 +4,31 @@
         <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
         <title>[{{ .Status }}] {{ .Target }}</title>
     </head>
-    <body style="background-color: #f6f5f8; text-align: center; margin: 0; padding: 32px 0">
-        <div style="background-color: #f6f5f8; color: #45414a; margin: auto; padding: 0 0 64px; max-width: 100%; width: 800px">
-            <div style="width: 0; height: 0; border: 32px solid transparent; border-color: #45414a transparent transparent #45414a"></div>
-
-            <span style="display: block; font-size: 200%; padding: 0 0 32px">{{ if eq .Status "RESOLVED" }}Incident Resolved{{ else }}Status "{{ .Status }}" alert{{ end }}</span>
-            <a href="{{ .Target }}" style="font-size: 130%; color: #45414a; font-weight: bold">{{ .Target }}</a><br />{{ if .Message }}
-            <span style="font-family: monospace; display: inline-block; background-color: #45414a; color: #f6f5f8; padding: 6px 12px">{{ .Message }}</span><br />{{ end }}
-            {{ .CheckedAt }}<br />
-
-            <a href="{{ .StatusPage }}" style="display: inline-block; background-color: #45414a; color: #f6f5f8; padding: 8px 16px; border-radius: 4px; text-decoration: none; margin: 48px 0 0">Status Page</a><br />
-
-            <div style="float: right; width: 0; height: 0; border: 32px solid transparent; border-color: transparent #45414a #45414a transparent"></div>
-            </div>
-        </div>
+    <body>
+        <span style="font-size: 120%">
+            <b style="padding: 4px 0 4px 4px; border-left: 4px solid {{ if eq .Status "RESOLVED" -}}
+                #89C923
+            {{- else if eq .Status "FAILURE" -}}
+                #FF2D00
+            {{- else if eq .Status "DEGRADE" -}}
+                #DDA100
+            {{- else -}}
+                black
+            {{- end }}">{{ .Status }}</b>
+            <a href="{{ .Target }}" style="color: inherit; text-decoration: none">{{ .Target }}</a>
+        </span><br />
+        at {{ .CheckedAt }}<br />{{ if .Message }}
+        <br />
+        <b>message</b><br />
+        <pre style="white-space: pre-wrap; margin: 4px 0 0 8px">{{ .Message }}</pre>{{ end }}{{ if .Extra }}<br />
+        <table style="margin: -2px">{{ range .Extra }}
+            <tr>
+                <th style="text-align: left; vertical-align: top; padding: 2px 4px 2px 0">{{ .Key }}</th>
+                <td style="white-space: pre-wrap">{{ .Value }}</td>
+            </tr>{{ end }}
+        </table>{{ end }}{{ if .StatusPage }}<br />
+        <hr />
+        Please check <a href="{{ .StatusPage }}">the current status</a>.{{ end }}
     </body>
 </html>
 
