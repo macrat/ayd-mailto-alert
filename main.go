@@ -112,7 +112,10 @@ func LoadConfig() (Config, error) {
 }
 
 func LoadConfigByPath(pathes []string) (Config, error) {
-	conf := Config{SSL: true, From: &mail.Address{"Ayd? Alert", "ayd@localhost"}}
+	conf := Config{
+		SSL:  true,
+		From: &mail.Address{Name: "Ayd Alert", Address: "ayd@localhost"},
+	}
 
 	for _, p := range pathes {
 		if f, err := os.Open(p); err == nil {
