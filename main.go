@@ -255,13 +255,26 @@ func main() {
 		os.Exit(2)
 	}
 
-	logger := ayd.NewLogger(&ayd.URL{
+	target := &ayd.URL{
 		Scheme: alertURL.Scheme,
 		Opaque: alertURL.Opaque,
-	})
+	}
+	logger := ayd.NewLogger(target)
 
 	conf, err := LoadConfig()
 	extra := map[string]interface{}{}
+	if from := alertURL.ToURL().Query().Get("from"); from != "" {
+		var e2 error
+		conf.From, e2 = mail.ParseAddress(from)
+		if e2 != nil {
+			logger.Failure(fmt.Sprintf("\"from\" e-mail address is invalid: %s", e2), extra)
+			return
+		}
+
+		target.RawQuery = (url.Values{
+			"from": {from},
+		}).Encode()
+	}
 	if conf.Host != "" {
 		extra["smtp_server"] = conf.Host
 		extra["from_address"] = conf.From.String()
@@ -273,7 +286,7 @@ func main() {
 
 	to, err := mail.ParseAddressList(alertURL.Opaque)
 	if err != nil {
-		logger.Failure(fmt.Sprintf("mail address is invalid: %s", err), extra)
+		logger.Failure(fmt.Sprintf("\"to\" e-mail address is invalid: %s", err), extra)
 		return
 	}
 

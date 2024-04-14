@@ -31,8 +31,8 @@ $ ayd -a mailto:your-email@example.com ping:your-target.example.com
 
 ``` shell
 $ export SMTP_SERVER=smtp.gmail.com:465
-$ export SMTP_USERNAME=<< your username >>
-$ export SMTP_PASSWORD=<< your password >>
+$ export SMTP_USERNAME=$YOUR_USERNAME
+$ export SMTP_PASSWORD=$YOUR_PASSWORD
 $ export AYD_URL="http://ayd-external-url.example.com"
 
 $ ayd -a mailto:your-email@example.com ping:your-target.example.com
@@ -50,3 +50,5 @@ Set all options through environment variable.
 | `SMTP_PASSWORD` |                             | Password for SMTP server.          |
 | `AYD_URL`       |                             | Ayd server address. (optional)     |
 | `AYD_MAIL_FROM` | `Ayd Alert <ayd@localhost>` | The From email address. (optional) |
+
+`AYD_MAIL_FROM` can also be set by `from` query in URL, for example, `mailto:your-email@example.com?from=your-server@example.com`.
