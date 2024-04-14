@@ -5,8 +5,8 @@ go 1.21
 require (
 	github.com/go-mail/mail v2.3.1+incompatible
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
-	github.com/google/uuid v1.3.0
-	github.com/macrat/ayd v0.16.5
+	github.com/google/uuid v1.6.0
+	github.com/macrat/ayd v0.16.6
 )
 
 require (

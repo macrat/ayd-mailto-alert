@@ -9,6 +9,8 @@ github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 h1:El6M4kTTCOh6aBiKaU
 github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510/go.mod h1:pupxD2MaaD3pAXIBCelhxNneeOaAeabZDe5s4K6zSpQ=
 github.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=
 github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
+github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/hashicorp/errwrap v1.1.0 h1:OxrOeh75EUXMY8TBjag2fzXGZ40LB6IKw45YeGUDY2I=
 github.com/hashicorp/go-multierror v1.1.1 h1:H5DkEtf6CXdFp0N0Em5UCwQpXMWke8IA0+lD48awMYo=
 github.com/jlaffaye/ftp v0.0.0-20220612151834-60a941566ce4 h1:gO/ufFrST8nt0py0FvlYHsSW81RCYeqflr8czF+UBys=
@@ -20,6 +22,8 @@ github.com/macrat/ayd v0.16.0 h1:k56jsODRmrn3BZyY94icH8FmFKDHP5yDiRFkPwamcOE=
 github.com/macrat/ayd v0.16.0/go.mod h1:3MxUuSVvgQw8zw2u2zyMUmxD2+MHHfOQeAMH5VB4CFM=
 github.com/macrat/ayd v0.16.5 h1:zLPicm4BWZyHgQfW17TORcFv78HBV60IkVXH4H5k0VQ=
 github.com/macrat/ayd v0.16.5/go.mod h1:uHIHN8WwIHwDnMO60h5qDp1s5cgKyotj4VA7CuVQeGc=
+github.com/macrat/ayd v0.16.6 h1:QAPkIxzQR7Qp/slm6oK0HoVZLv2bf4hGldAbHsWGvHE=
+github.com/macrat/ayd v0.16.6/go.mod h1:IFMwlRdbmPLO9eZjdfUVKdvn89Qz5bf2Jo5gz3wdUWQ=
 github.com/macrat/go-parallel-pinger v1.1.3 h1:WpD2jHXoOn/A2Uy0CAvd85lpNHzX0jnO0hYSDcyEHA0=
 golang.org/x/net v0.0.0-20220624214902-1bab6f366d9e h1:TsQ7F31D3bUCLeqPT0u+yjp1guoArKaNKmCr22PYgTQ=
 golang.org/x/sys v0.0.0-20220624220833-87e55d714810 h1:rHZQSjJdAI4Xf5Qzeh2bBc5YJIkPFVM6oDtMFYmgws0=
